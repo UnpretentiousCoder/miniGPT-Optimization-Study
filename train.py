@@ -29,6 +29,12 @@ def train_eval_split(data, train_rate=0.9):
     ev = data[n:]
     return train, ev
 
+def get_batches(data, batch_size, split, block_size):
+    ix = torch.randint(0, len(data)-block_size, (batch_size,))
+    x = torch.stack([data[i:i+block_size] for i in ix])
+    y = torch.stack([data[i+1:i+block_size+1] for i in ix])
+    return x, y
+
 def main():
     url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
     text = get_dataset(url)
