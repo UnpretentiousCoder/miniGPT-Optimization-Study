@@ -52,3 +52,5 @@ for b in range(batch_size):
         context = xb[b, :i+1]
         target = yb[b, i]
         print("Context:", context.tolist(), "Target:", target.item())
+print("Batch input:", xb)
+print("Batch target:", yb)
