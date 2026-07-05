@@ -10,18 +10,22 @@ class BigramLanguageModel(nn.Module):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, vocab_size) #this maps each token to a vector of size "vocab_size"
         #num_embeddings = vocab_size, embedding_dim = vocab_size, returns B,T,C (a score for every single character in the vocabulary for every position in the input sequence)
+        #vector of size vocab_size for each token in the input sequence, which is then used to predict the next token in the sequence
 
-    def forward(self, idx, targets):
+    def forward(self, idx, targets= None): 
         logits = self.token_embedding_table(idx) #this returns a tensor of shape (batch_size, block_size, vocab_size)
-        B, T, C = logits.shape
-        logits = logits.view(B*T, C) #converts to a 2D tensor of shape (B*T, C) for the loss function
-        targets = targets.view(B*T)
-        loss = F.cross_entropy(logits, targets)
+        if targets is None:
+            loss = None
+        else:
+            B, T, C = logits.shape
+            logits = logits.view(B*T, C) #converts to a 2D tensor of shape (B*T, C) for the loss function
+            targets = targets.view(B*T)
+            loss = F.cross_entropy(logits, targets)
         return logits, loss #B,T,C
     
-    def generate(self, idx, max_new_tokens):
+    def generate(self, idx, max_new_tokens): #idx is B,T
         for _ in range(max_new_tokens):
-            logits, loss = self(idx) #runs the self.token_embedding_table
+            logits, loss = self(idx) #runs the forward
             logits = logits[:, -1, :] #keep the last time step(column) of the logits, shape (B, C)
             probs = F.softmax(logits, dim = -1)#converts the logits to probabilities, shape (B, C)
             idx_next = torch.multinomial(probs, num_samples=1) #returns a tensor of shape (B, 1) with the index of the next token sampled from the probabilities
@@ -48,3 +52,4 @@ m = BigramLanguageModel(vocab_size=65)
 logits, loss = m(xt, yt) #runs the forward pass of the model, returns a tensor of shape (batch_size, block_size, vocab_size)
 print(logits.shape) #this should print torch.Size([4, 8, 65]) which is (batch_size, block_size, vocab_size)
 print(loss)
+print(decoder(m.generate(torch.zeros((1,1), dtype= torch.long), max_new_tokens= 100)[0].tolist())) #this generates 100 new tokens from the model and decodes them to characters
