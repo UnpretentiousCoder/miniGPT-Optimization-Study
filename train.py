@@ -4,6 +4,7 @@ from bigram_language_model import BigramLanguageModel
 batch_size = 32
 block_size = 8
 device = "cuda" if torch.cuda.is_available() else "cpu"
+n_embed = 32
 
 def get_dataset(url):
     """
