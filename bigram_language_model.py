@@ -12,7 +12,7 @@ class BigramLanguageModel(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed) #this maps each token to a vector of size "n_embed" #semantic meaning of the token is captured in the vector representation, which is learned during training
-        self.position_embedding_table = nn.Embedding(block_size, n_embed)
+        self.position_embedding_table = nn.Embedding(block_size, n_embed) #T by C, maps the position of each token in the input sequence to a vector of size "n_embed" #this allows the model to capture the order of the tokens in the input sequence, which is important for language modeling
         self.lm_head = nn.Linear(n_embed, vocab_size) #num_embeddings = vocab_size, embedding_dim = n_embed, returns B,T,C (a score for every single character in the vocabulary for every position in the input sequence)
         #vector of size n_embed for each token in the input sequence, which is then used to predict the next token in the sequence
 
@@ -21,7 +21,7 @@ class BigramLanguageModel(nn.Module):
         token_embed = self.token_embedding_table(idx) #this returns a tensor of shape (batch_size, block_size, n_embed)
         pos_embed = self.position_embedding_table(torch.arange(T, device=idx.device)) #this returns a tensor of shape (block_size, n_embed)
         x = token_embed + pos_embed #this adds the token embeddings and position embeddings together, shape (batch_size, block_size, n_embed)
-        logits = self.lm_head(x) #this returns a tensor of shape (batch_size, block_size, vocab_size)
+        logits = self.lm_head(x) #this returns a tensor of shape (batch_size, block_size, vocab_size). Y = X@W.T + b
         if targets is None:
             loss = None
         else:
