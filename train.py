@@ -1,6 +1,9 @@
 import requests
 import torch
+from torch import nn
+from torch.nn import functional as F
 from bigram_language_model import BigramLanguageModel
+
 batch_size = 32
 block_size = 8
 device = "cuda" if torch.cuda.is_available() else "cpu"
