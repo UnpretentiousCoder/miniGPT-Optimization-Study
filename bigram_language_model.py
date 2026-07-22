@@ -15,6 +15,7 @@ class BigramLanguageModel(nn.Module):
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed) #this maps each token to a vector of size "n_embed" #semantic meaning of the token is captured in the vector representation, which is learned during training
         self.position_embedding_table = nn.Embedding(block_size, n_embed) #T by C, maps the position of each token in the input sequence to a vector of size "n_embed" #this allows the model to capture the order of the tokens in the input sequence, which is important for language modeling
         self.sa_head = MultiHeadAttention(num_heads=4, n_embed=n_embed, head_size=head_size) #this is a single head of self-attention, which allows the model to capture the relationships between the tokens in the input sequence, regardless of their position in the sequence
+        self.ffwd = FeedForward(n_embed) #this is a feedforward neural network that takes the output of the self-attention head and projects it back to the embedding size, which allows the model to capture more complex relationships between the tokens in the input sequence
         self.lm_head = nn.Linear(n_embed, vocab_size) #the attention block projects back to the embedding size before predicting the next token
         #vector of size n_embed for each token in the input sequence, which is then used to predict the next token in the sequence
 
@@ -24,6 +25,7 @@ class BigramLanguageModel(nn.Module):
         pos_embed = self.position_embedding_table(torch.arange(T, device=idx.device)) #this returns a tensor of shape (block_size, n_embed)
         x = token_embed + pos_embed #this adds the token embeddings and position embeddings together, shape (batch_size, block_size, n_embed)
         x = self.sa_head(x)
+        x = self.ffwd(x)
         logits = self.lm_head(x) #this returns a tensor of shape (batch_size, block_size, vocab_size). Y = X@W.T + b
         if targets is None:
             loss = None
@@ -77,6 +79,17 @@ class MultiHeadAttention(nn.Module):
         out = torch.cat([h(x) for h in self.heads], dim=-1)
         out = self.proj(out)
         return out
+    
+class FeedForward(nn.Module):
+    """linear layer followed by a non-lienar activation function"""
+    def __init__(self, n_embed):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embed, n_embed),
+            nn.ReLU(),
+        )
+    def forward(self, x):
+        return self.net(x)
     
 url = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 text = requests.get(url).text
