@@ -4,10 +4,10 @@ from torch import nn
 from torch.nn import functional as F
 from bigram_language_model import BigramLanguageModel
 
-batch_size = 32
-block_size = 8
+batch_size = 64
+block_size = 256
 device = "cuda" if torch.cuda.is_available() else "cpu"
-n_embed = 32
+n_embed = 384
 
 def get_dataset(url):
     """
@@ -53,8 +53,8 @@ def main():
     train_data, eval_data = train_eval_split(data)
     m = BigramLanguageModel(vocab_size=len(set(text)))
     m = m.to(device)
-    optimiser = torch.optim.AdamW(m.parameters(), lr=1e-3)
-    for step in range(4000):
+    optimiser = torch.optim.AdamW(m.parameters(), lr=3e-4)
+    for step in range(5000):
         
         xb, yb = get_batches(train_data)
         logits, loss = m(xb, yb)
