@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 torch.manual_seed(42)
 
-class BigramLanguageModel(nn.Module):
+class BigramLanguageModel_FA(nn.Module):
     def __init__(self, vocab_size, n_embed=384, num_heads=6, block_size=256):
         super().__init__()
         self.n_embed = n_embed
@@ -64,13 +64,14 @@ class Head(nn.Module):
         k = self.key(x)   # (B, T, head_size)
         q = self.query(x) # (B, T, head_size)
         v = self.value(x) # (B, T, head_size)
-        head_size = q.shape[-1]
-
-        wei = q @ k.transpose(-2, -1) / (head_size ** 0.5) # (B, T, head_size) @ (B, head_size, T) = (B, T, T)
-        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
-        wei = F.softmax(wei, dim = -1)  
-        wei = self.dropout(wei)
-        out = wei @ v # (B, T, T) @ (B, T, head_size) = (B, T, head_size)
+        out = F.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            attn_mask=None,
+            dropout_p=self.dropout.p if self.training else 0.0,
+            is_causal=True,
+        )
         return out
     
 class MultiHeadAttention(nn.Module):
@@ -128,3 +129,4 @@ class LayerNorm(nn.Module):
         var = x.var(dim=-1, keepdim=True, unbiased = False)
         x_norm = (x - mean) / torch.sqrt(var + self.eps)
         return self.gamma * x_norm + self.beta
+

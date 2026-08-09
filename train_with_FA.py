@@ -3,7 +3,7 @@ import torch
 import subprocess
 import time
 from pathlib import Path
-from bigram_language_model import BigramLanguageModel
+from bigram_LM_FA import BigramLanguageModel_FA
 from dataloader import tokenise_by_tiktoken, train_eval_split, get_batches
 from datasets import load_dataset
 
@@ -14,7 +14,7 @@ n_embed = 192
 num_heads = 4
 max_grad_norm = 1.0
 checkpoint_path = Path("checkpoints/bigram_language_model.pt")
-metrics_path = Path("logs/training_metrics.csv")
+metrics_path = Path("logs/training_metrics_FA.csv")
 tokenizer_name = "gpt2"
 profile_every = 200
 
@@ -38,7 +38,7 @@ def save_checkpoint(model, optimiser, tokenizer_name, vocab_size, n_embed, num_h
 def load_checkpoint():
     checkpoint = torch.load(checkpoint_path, map_location=device)
     tokenizer_name = checkpoint.get("tokenizer_name", "gpt2")
-    model = BigramLanguageModel(
+    model = BigramLanguageModel_FA(
         vocab_size=checkpoint["vocab_size"],
         n_embed=checkpoint.get("n_embed", 384),
         num_heads=checkpoint.get("num_heads", 6),
@@ -125,7 +125,7 @@ def main():
     data = torch.tensor(encoded_text, dtype=torch.long)
     vocab_size = max(encoded_text) + 1
     train_data, _ = train_eval_split(data)
-    m = BigramLanguageModel(vocab_size=vocab_size, n_embed=n_embed, num_heads=num_heads, block_size=block_size)
+    m = BigramLanguageModel_FA(vocab_size=vocab_size, n_embed=n_embed, num_heads=num_heads, block_size=block_size)
     m = m.to(device)
     optimiser = torch.optim.AdamW(m.parameters(), lr=3e-4)
     print(f"Training on {device} with batch_size={batch_size}, block_size={block_size}, n_embed={n_embed}")
