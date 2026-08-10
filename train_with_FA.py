@@ -8,7 +8,7 @@ from dataloader import tokenise_by_tiktoken, train_eval_split, get_batches
 from datasets import load_dataset
 
 batch_size = 8
-block_size = 64
+block_size = 128
 device = "cuda" if torch.cuda.is_available() else "cpu"
 n_embed = 192
 num_heads = 4
